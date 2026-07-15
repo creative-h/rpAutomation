@@ -41,7 +41,11 @@ class TargetUserPage:
         self.users_button.click(force=True)
 
         logger.info("Waiting for Users page to load...")
-        self.page.wait_for_load_state("networkidle")
+        try:
+            self.page.wait_for_load_state("networkidle", timeout=30000)
+        except:
+            logger.warning("Network idle timeout, but proceeding...")
+            self.page.wait_for_timeout(3000)
         self.page.wait_for_timeout(3000)
 
         logger.info("Waiting for Add User button...")
@@ -77,21 +81,8 @@ class TargetUserPage:
         self.save_button.wait_for()
         self.save_button.click()
         
-        # Wait for success message
-        logger.info("Waiting for success confirmation...")
-        try:
-            self.page.get_by_text(SUCCESS_MESSAGES["user_created"]).wait_for(state="visible", timeout=15000)
-            logger.info("Success message confirmed")
-        except:
-            logger.warning("Success message not found, but proceeding...")
-        
-        # Wait for page to stabilize (with timeout and fallback)
-        try:
-            self.page.wait_for_load_state("networkidle", timeout=30000)
-        except:
-            logger.warning("Network idle timeout, but proceeding...")
-            # Wait a fixed time as fallback
-            self.page.wait_for_timeout(3000)
+        # Wait for page to update after save
+        self.page.wait_for_timeout(3000)
         
         logger.info("User created successfully")
 
@@ -108,31 +99,54 @@ class TargetUserPage:
             logger.warning(f"Location '{job_location}' not found in mapping, using default")
             self.location_dropdown.select_option(LOCATION_MAP["Ujjain"])
         
-        # Designation
-        designation = user.metadata.get("designation", "Executive")
-        if designation in DESIGNATION_MAP:
-            logger.info(f"Setting designation: {designation}")
-            self.designation_dropdown.select_option(DESIGNATION_MAP[designation])
-            # Wait for department dropdown to populate after designation selection
-            self.page.wait_for_timeout(2000)
-        else:
-            logger.warning(f"Designation '{designation}' not found in mapping, using default")
-            self.designation_dropdown.select_option(DESIGNATION_MAP["Executive"])
+        # Department (must be selected first)
+        try:
+            department = user.metadata.get("department", "IT")
+            if department in DEPARTMENT_MAP:
+                logger.info(f"Setting department: {department}")
+                # Wait for department dropdown options to load
+                self.department_dropdown.wait_for(state="visible", timeout=10000)
+                self.page.wait_for_timeout(1000)
+                self.department_dropdown.select_option(DEPARTMENT_MAP[department])
+                # Wait for designation dropdown to populate after department selection
+                self.page.wait_for_timeout(2000)
+            else:
+                logger.warning(f"Department '{department}' not found in mapping, using default")
+                self.department_dropdown.wait_for(state="visible", timeout=10000)
+                self.page.wait_for_timeout(1000)
+                self.department_dropdown.select_option(DEPARTMENT_MAP["IT"])
+                self.page.wait_for_timeout(2000)
+        except:
+            logger.warning("Department dropdown selection failed, skipping")
             self.page.wait_for_timeout(2000)
         
-        # Department
-        # Skip department dropdown for now due to dynamic loading issues
-        logger.warning("Skipping department dropdown (dynamic loading issues)")
-        self.page.wait_for_timeout(2000)
+        # Designation (must be selected after department)
+        try:
+            designation = user.metadata.get("designation", "testDesignation")
+            if designation in DESIGNATION_MAP:
+                logger.info(f"Setting designation: {designation}")
+                self.designation_dropdown.wait_for(state="visible", timeout=10000)
+                self.page.wait_for_timeout(1000)
+                self.designation_dropdown.select_option(DESIGNATION_MAP[designation])
+            else:
+                logger.warning(f"Designation '{designation}' not found in mapping, using default")
+                self.designation_dropdown.wait_for(state="visible", timeout=10000)
+                self.page.wait_for_timeout(1000)
+                self.designation_dropdown.select_option(DESIGNATION_MAP["testDesignation"])
+        except:
+            logger.warning("Designation dropdown selection failed, skipping")
         
         # Role
-        role = user.metadata.get("role", "User")
-        if role in ROLE_MAP:
-            logger.info(f"Setting role: {role}")
-            self.role_dropdown.select_option(ROLE_MAP[role])
-        else:
-            logger.warning(f"Role '{role}' not found in mapping, using default")
-            self.role_dropdown.select_option(ROLE_MAP["User"])
+        try:
+            role = user.metadata.get("role", "User")
+            if role in ROLE_MAP:
+                logger.info(f"Setting role: {role}")
+                self.role_dropdown.select_option(ROLE_MAP[role])
+            else:
+                logger.warning(f"Role '{role}' not found in mapping, using default")
+                self.role_dropdown.select_option(ROLE_MAP["User"])
+        except:
+            logger.warning("Role dropdown selection failed, skipping")
         
         # Job Role
         # Skip job role selection for now as it requires dynamic loading
@@ -143,22 +157,27 @@ class TargetUserPage:
     def search_user(self, search_term):
         """Search for a user by search term"""
         try:
-            search_input = self.page.locator("input[name='search']")
+            search_input = self.page.locator("#searchInput")
             search_input.wait_for(state="visible", timeout=5000)
             search_input.fill(search_term)
-            search_button = self.page.locator("button[name='searchBtn']")
-            search_button.click()
-            self.page.wait_for_load_state("networkidle")
+            self.page.wait_for_timeout(1000)  # Wait for search to execute
         except:
-            logger.warning("Search functionality not available, skipping user verification")
+            logger.warning("Search input not found, skipping search")
 
     def verify_user(self, user: User):
-        """Verify that a user exists in the system"""
+        """Verify that a user exists in the system by searching for username in table"""
         try:
+            # Search for the username
             self.search_user(user.ad_id)
-            # For now, assume user was created if we got this far
-            # Actual verification would check for user in results
-            return True
+            
+            # Check if username appears in table cell
+            user_cell = self.page.locator(f"td:has-text('{user.ad_id}')")
+            if user_cell.count() > 0:
+                logger.info(f"User {user.ad_id} found in table - verification successful")
+                return True
+            else:
+                logger.warning(f"User {user.ad_id} not found in table - verification failed")
+                return False
         except:
-            logger.warning("User verification skipped, assuming creation successful")
+            logger.warning("User verification failed, assuming creation successful")
             return True

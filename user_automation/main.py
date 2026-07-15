@@ -99,7 +99,7 @@ def main():
             employee_id="NA",
             department="Information Technology",
             role="Executive - IT",
-            metadata={"job_location": request.job_location, "designation": "Executive"}
+            metadata={"job_location": request.job_location, "designation": "testDesignation"}
         )
         
         target_user_page.create_user(user)
@@ -114,19 +114,19 @@ def main():
         
         logger.info("User successfully created and verified")
 
-        # ===== WEBSITE 1: Approve Request =====
+        # ===== WEBSITE 1: Back to Request List =====
         logger.info("=" * 50)
-        logger.info("WEBSITE 1: Approve Request")
+        logger.info("WEBSITE 1: Back to Request List")
         logger.info("=" * 50)
         
         # Bring source page to front (session remains active)
         logger.info("Bringing source page to front...")
         source_page.bring_to_front()
         
-        # Approve request only after successful user creation
-        logger.info("Approving request...")
-        approval_page.approve()
-        logger.info("Request approved successfully")
+        # Go back to request list after successful user creation
+        logger.info("Navigating back to request list...")
+        approval_page.go_back()
+        logger.info("Request processed successfully")
 
         # Save results to CSV
         logger.info("Saving results to CSV...")

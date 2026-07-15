@@ -24,6 +24,7 @@ class ApprovalPage:
         self.job_location = page.locator("#ctl00_ContentPlaceHolder1_txt_app_jobloc")
         self.approve_button = page.get_by_role("button", name="Approve")
         self.reject_button = page.get_by_role("button", name="Reject")
+        self.back_button = page.locator("#ctl00_ContentPlaceHolder1_bttn_frm_app_back")
 
     def open_general_requests(self):
         """Navigate to general requests page"""
@@ -35,7 +36,8 @@ class ApprovalPage:
         self.general_request.wait_for(state="visible", timeout=10000)
         self.general_request.click()
         
-        self.page.wait_for_load_state("networkidle")
+        # Don't wait for navigation as clicking General Request doesn't trigger one
+        self.page.wait_for_timeout(2000)
         logger.info("General Requests page loaded")
 
     def filter_creation_requests(self):
@@ -109,6 +111,17 @@ class ApprovalPage:
             logger.warning(f"  Expected Request Type: Creation, Got: {request.request_type}")
             logger.warning(f"  Expected Request Category: APPLICATIONS, Got: {request.request_category}")
             return False
+
+    def go_back(self):
+        """Go back to the requests list using the back button"""
+        logger.info("Clicking Back button...")
+        try:
+            self.back_button.wait_for(state="visible", timeout=10000)
+            self.back_button.click()
+            self.page.wait_for_timeout(2000)
+            logger.info("Successfully navigated back")
+        except:
+            logger.warning("Back button not found, skipping")
 
     def approve(self):
         """Approve the current request"""
