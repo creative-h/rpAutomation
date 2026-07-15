@@ -53,6 +53,10 @@ class BrowserManager:
 
         self.page = self.context.new_page()
 
+    def new_page(self):
+        """Create a new page/tab in the same context"""
+        return self.context.new_page()
+
     def close(self):
         self.context.close()
         self.browser.close()

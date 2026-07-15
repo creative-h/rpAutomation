@@ -1,11 +1,13 @@
 # Main entry point for user automation
 from utils.browser import BrowserManager
 from pages.login_page import LoginPage
-from pages.source_request_page import SourceRequestPage
+from pages.approval_page import ApprovalPage
+from pages.target_login_page import TargetLoginPage
 from pages.target_user_page import TargetUserPage
-from models.user import User
+from models.user_request import UserRequest
 from utils.logger import setup_logger
 from utils.screenshots import take_error_screenshot
+from utils.counter import generate_unique_username
 import pandas as pd
 import os
 import sys
@@ -33,46 +35,97 @@ def main():
         browser = BrowserManager()
         logger.info("Browser initialized")
 
-        # Login to source system
+        # ===== WEBSITE 1: Source System =====
+        logger.info("=" * 50)
+        logger.info("WEBSITE 1: Source System")
+        logger.info("=" * 50)
+        
+        # Create source page
+        source_page = browser.page
         logger.info("Navigating to source system...")
-        browser.page.goto(SOURCE_URL)
+        source_page.goto(SOURCE_URL)
         logger.info("Logging into source system...")
-        login_page = LoginPage(browser.page)
+        login_page = LoginPage(source_page)
         login_page.login(SOURCE_USERNAME, SOURCE_PASSWORD)
         logger.info("Logged into source system")
 
-        # Navigate to source request page and read single user
-        logger.info("Navigating to source request page...")
-        source_page = SourceRequestPage(browser.page)
-        source_page.open_request()
-        logger.info("Selecting SELF filter...")
-        source_page.select_self()
-        logger.info("Reading user data...")
-        user = source_page.read_user()
-        logger.info(f"Retrieved user: {user.email}")
+        # Navigate to approvals and read request
+        logger.info("Opening Approvals page...")
+        approval_page = ApprovalPage(source_page)
+        approval_page.open_general_requests()
+        
+        logger.info("Filtering for Creation requests...")
+        approval_page.filter_creation_requests()
+        
+        logger.info("Selecting first request...")
+        approval_page.select_first_request()
+        
+        logger.info("Reading request data...")
+        request = approval_page.read_request()
+        
+        # Validate request before proceeding
+        if not approval_page.verify_request(request):
+            logger.error("Request does not match approval criteria. Aborting automation.")
+            return
 
-        # Login to target system
+        # ===== WEBSITE 2: ELMS (New Tab) =====
+        logger.info("=" * 50)
+        logger.info("WEBSITE 2: ELMS (New Tab)")
+        logger.info("=" * 50)
+        
+        # Create new tab for ELMS
+        logger.info("Opening new tab for ELMS...")
+        target_page = browser.new_page()
         logger.info("Navigating to target system...")
-        browser.page.goto(TARGET_URL)
+        target_page.goto(TARGET_URL)
         logger.info("Logging into target system...")
-        target_page = TargetUserPage(browser.page)
-        target_page.login(TARGET_USERNAME, TARGET_PASSWORD)
+        target_login = TargetLoginPage(target_page)
+        target_login.login(TARGET_PASSWORD)
         logger.info("Logged into target system")
 
         # Create user in target system
         logger.info("Creating user in target system...")
-        logger.info(f"Creating user: {user.email}")
-        target_page.create_user(user)
-        logger.info(f"Created user: {user.email}")
+        logger.info(f"Creating user: {request.ad_id}")
+        target_user_page = TargetUserPage(target_page)
+        
+        # Convert UserRequest to User for target system
+        from models.user import User
+        unique_username = generate_unique_username(request.ad_id)
+        user = User(
+            ad_id=unique_username,
+            first_name=request.first_name,
+            last_name=request.last_name,
+            email=f"{request.first_name.lower()}.{request.last_name.lower()}@swastisolutions.com",
+            employee_id="NA",
+            department="Information Technology",
+            role="Executive - IT",
+            metadata={"job_location": request.job_location, "designation": "Executive"}
+        )
+        
+        target_user_page.create_user(user)
+        
+        # Verify user creation
+        logger.info("Verifying user creation...")
+        user_created = target_user_page.verify_user(user)
+        
+        if not user_created:
+            logger.error("User creation verification failed. Aborting automation.")
+            return
+        
+        logger.info("User successfully created and verified")
 
+        # ===== WEBSITE 1: Approve Request =====
+        logger.info("=" * 50)
+        logger.info("WEBSITE 1: Approve Request")
+        logger.info("=" * 50)
+        
+        # Bring source page to front (session remains active)
+        logger.info("Bringing source page to front...")
+        source_page.bring_to_front()
+        
         # Approve request only after successful user creation
-        logger.info("Approving request in source system...")
-        browser.page.goto(SOURCE_URL)
-        login_page.login(SOURCE_USERNAME, SOURCE_PASSWORD)
-        source_page = SourceRequestPage(browser.page)
-        source_page.open_request()
-        source_page.select_self()
-        source_page.approve()
+        logger.info("Approving request...")
+        approval_page.approve()
         logger.info("Request approved successfully")
 
         # Save results to CSV
@@ -89,10 +142,6 @@ def main():
         logger.error(f"Error occurred: {str(e)}")
         if browser:
             take_error_screenshot(browser.page)
-        # Only wait for input if stdin is available (not in windowed mode)
-        if sys.stdin is not None:
-            logger.error("Browser will remain open for inspection. Press Enter to close...")
-            input()
         raise
     finally:
         if browser:
