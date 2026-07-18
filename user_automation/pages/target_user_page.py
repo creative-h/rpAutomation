@@ -154,6 +154,30 @@ class TargetUserPage:
         logger.info("Skipping job role selection (requires dynamic loading)")
         logger.warning("Job role will need to be set manually or with additional logic")
 
+    def check_username_exists(self, username):
+        """Check if a username already exists in the system"""
+        try:
+            # Navigate to Users list page first to access search
+            logger.info("Navigating to Users list page for username check...")
+            self.users_button.wait_for(state="visible", timeout=10000)
+            self.users_button.click()
+            self.page.wait_for_timeout(2000)
+            
+            # Search for the username
+            self.search_user(username)
+            
+            # Check if username appears in table cell
+            user_cell = self.page.locator(f"td:has-text('{username}')")
+            if user_cell.count() > 0:
+                logger.info(f"Username {username} already exists in system")
+                return True
+            else:
+                logger.info(f"Username {username} is available")
+                return False
+        except:
+            logger.warning("Username check failed, assuming username is available")
+            return False
+
     def search_user(self, search_term):
         """Search for a user by search term"""
         try:
@@ -167,8 +191,17 @@ class TargetUserPage:
     def verify_user(self, user: User):
         """Verify that a user exists in the system by searching for username in table"""
         try:
+            # Navigate to Users list page first to access search
+            logger.info("Navigating to Users list page for verification...")
+            self.users_button.wait_for(state="visible", timeout=10000)
+            self.users_button.click()
+            self.page.wait_for_timeout(3000)  # Wait for page to load and refresh
+            
             # Search for the username
             self.search_user(user.ad_id)
+            
+            # Wait longer for search results to load
+            self.page.wait_for_timeout(2000)
             
             # Check if username appears in table cell
             user_cell = self.page.locator(f"td:has-text('{user.ad_id}')")

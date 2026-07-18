@@ -99,7 +99,15 @@ def main():
             retry_count += 1
             logger.info(f"Attempt {retry_count}/{max_retries}")
             
+            # Generate unique username and check if it exists
             unique_username = generate_unique_username(request.ad_id)
+            username_exists = target_user_page.check_username_exists(unique_username)
+            
+            # If username exists, try another one
+            if username_exists:
+                logger.warning(f"Username {unique_username} already exists, trying next...")
+                continue
+            
             user = User(
                 ad_id=unique_username,
                 first_name=request.first_name,
