@@ -83,36 +83,58 @@ def main():
         target_login.login(TARGET_PASSWORD)
         logger.info("Logged into target system")
 
-        # Create user in target system
+        # Create user in target system with retry logic
         logger.info("Creating user in target system...")
         logger.info(f"Creating user: {request.ad_id}")
         target_user_page = TargetUserPage(target_page)
         
         # Convert UserRequest to User for target system
         from models.user import User
-        unique_username = generate_unique_username(request.ad_id)
-        user = User(
-            ad_id=unique_username,
-            first_name=request.first_name,
-            last_name=request.last_name,
-            email=f"{request.first_name.lower()}.{request.last_name.lower()}@swastisolutions.com",
-            employee_id="NA",
-            department="Information Technology",
-            role="Executive - IT",
-            metadata={"job_location": request.job_location, "designation": "testDesignation"}
-        )
         
-        target_user_page.create_user(user)
+        max_retries = 5
+        retry_count = 0
+        user_created = False
         
-        # Verify user creation
-        logger.info("Verifying user creation...")
-        user_created = target_user_page.verify_user(user)
+        while retry_count < max_retries and not user_created:
+            retry_count += 1
+            logger.info(f"Attempt {retry_count}/{max_retries}")
+            
+            unique_username = generate_unique_username(request.ad_id)
+            user = User(
+                ad_id=unique_username,
+                first_name=request.first_name,
+                last_name=request.last_name,
+                email=f"{request.first_name.lower()}.{request.last_name.lower()}@swastisolutions.com",
+                employee_id="NA",
+                department="Information Technology",
+                role="Executive - IT",
+                metadata={"job_location": request.job_location, "designation": "testDesignation"}
+            )
+            
+            try:
+                target_user_page.create_user(user)
+                
+                # Verify user creation
+                logger.info("Verifying user creation...")
+                user_created = target_user_page.verify_user(user)
+                
+                if user_created:
+                    logger.info(f"User successfully created and verified: {unique_username}")
+                else:
+                    logger.warning(f"User creation verification failed for {unique_username}. Retrying...")
+                    # Wait before retry
+                    if retry_count < max_retries:
+                        logger.info("Waiting 3 seconds before retry...")
+                        target_page.wait_for_timeout(3000)
+            except Exception as e:
+                logger.error(f"Error during user creation attempt {retry_count}: {str(e)}")
+                if retry_count < max_retries:
+                    logger.info("Waiting 3 seconds before retry...")
+                    target_page.wait_for_timeout(3000)
         
         if not user_created:
-            logger.error("User creation verification failed. Aborting automation.")
+            logger.error(f"User creation failed after {max_retries} attempts. Aborting automation.")
             return
-        
-        logger.info("User successfully created and verified")
 
         # ===== WEBSITE 1: Back to Request List =====
         logger.info("=" * 50)
