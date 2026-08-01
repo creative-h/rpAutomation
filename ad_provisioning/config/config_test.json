@@ -1,0 +1,39 @@
+{
+  "portal": {
+    "login_url": "http://185.131.55.105:8057/Login",
+    "username": "amit.mishra",
+    "password": "123"
+  },
+  "ldap": {
+    "server": "192.168.56.101",
+    "domain": "automation.local",
+    "bind_user": "AUTOMATION\\Administrator",
+    "bind_password": "Admin@12345",
+    "port": 389,
+    "use_ssl": false,
+    "base_dn": "DC=automation,DC=local"
+  },
+  "ad": {
+    "default_password": "Pass@12345",
+    "force_password_change": true,
+    "default_ou": "OU=Users,OU=Automation,DC=automation,DC=local"
+  },
+  "validation": {
+    "mandatory_fields": [
+      "first_name",
+      "last_name",
+      "email",
+      "department",
+      "employee_id"
+    ]
+  },
+  "logging": {
+    "log_file": "logs/ad_provisioning.log",
+    "log_level": "INFO",
+    "screenshot_dir": "logs/screenshots"
+  },
+  "reports": {
+    "output_dir": "reports",
+    "format": "csv"
+  }
+}

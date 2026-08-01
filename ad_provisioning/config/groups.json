@@ -1,0 +1,22 @@
+{
+  "department_group_mapping": {
+    "IT": "IT Users",
+    "HR": "HR Users",
+    "Finance": "Finance Users",
+    "Operations": "Operations Users",
+    "Sales": "Sales Users",
+    "Marketing": "Marketing Users",
+    "Legal": "Legal Users",
+    "Administration": "Administration Users"
+  },
+  "default_groups": [
+    "Domain Users"
+  ],
+  "location_ou_mapping": {
+    "INDORE": "CN=Users,DC=swasti,DC=com",
+    "MUMBAI": "CN=Users,DC=swasti,DC=com",
+    "DELHI": "CN=Users,DC=swasti,DC=com",
+    "BANGALORE": "CN=Users,DC=swasti,DC=com",
+    "DEFAULT": "CN=Users,DC=swasti,DC=com"
+  }
+}

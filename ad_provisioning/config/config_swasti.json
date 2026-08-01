@@ -1,0 +1,39 @@
+{
+  "portal": {
+    "login_url": "http://185.131.55.105:8057/Login",
+    "username": "amit.mishra",
+    "password": "123"
+  },
+  "ldap": {
+    "server": "swasti.com",
+    "domain": "swasti.com",
+    "bind_user": "swasti\\administrator",
+    "bind_password": "Shree@2029",
+    "port": 389,
+    "use_ssl": false,
+    "base_dn": "DC=swasti,DC=com"
+  },
+  "ad": {
+    "default_password": "Pass@12345",
+    "force_password_change": true,
+    "default_ou": "CN=Users,DC=swasti,DC=com"
+  },
+  "validation": {
+    "mandatory_fields": [
+      "first_name",
+      "last_name",
+      "email",
+      "department",
+      "employee_id"
+    ]
+  },
+  "logging": {
+    "log_file": "logs/ad_provisioning.log",
+    "log_level": "INFO",
+    "screenshot_dir": "logs/screenshots"
+  },
+  "reports": {
+    "output_dir": "reports",
+    "format": "csv"
+  }
+}
