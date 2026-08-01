@@ -169,7 +169,11 @@ class ADProvisioningOrchestrator:
             # Create AD user
             self.logger.info(f"Creating AD user: {user.username}...")
             ou_manager = OUManager(self.ldap_connection)
-            target_ou = ou_manager.get_ou_for_location(user.location)
+            # Use department-based OU for swasti.com, location-based for automation.local
+            if "swasti" in self.ldap_connection.get_base_dn().lower():
+                target_ou = ou_manager.get_ou_for_department(user.department)
+            else:
+                target_ou = ou_manager.get_ou_for_location(user.location)
             
             user_creator = ADUserCreator(self.ldap_connection)
             user_dn = user_creator.create_user(user, target_ou)

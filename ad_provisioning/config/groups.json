@@ -13,10 +13,21 @@
     "Domain Users"
   ],
   "location_ou_mapping": {
-    "INDORE": "CN=Users,DC=swasti,DC=com",
-    "MUMBAI": "CN=Users,DC=swasti,DC=com",
-    "DELHI": "CN=Users,DC=swasti,DC=com",
-    "BANGALORE": "CN=Users,DC=swasti,DC=com",
-    "DEFAULT": "CN=Users,DC=swasti,DC=com"
+    "INDORE": "CN=Users,DC=automation,DC=local",
+    "MUMBAI": "CN=Users,DC=automation,DC=local",
+    "DELHI": "CN=Users,DC=automation,DC=local",
+    "BANGALORE": "CN=Users,DC=automation,DC=local",
+    "DEFAULT": "CN=Users,DC=automation,DC=local"
+  },
+  "department_ou_mapping": {
+    "IT": "OU=IT_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "HR": "OU=HR_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "FINANCE": "OU=FINANCE_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "OPERATIONS": "OU=OPS_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "SALES": "OU=SALES_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "MARKETING": "OU=MARKETING_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "LEGAL": "OU=LEGAL_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "ADMINISTRATION": "OU=ADMIN_DEPT,OU=swastisolutions,DC=swasti,DC=com",
+    "DEFAULT": "OU=IT_DEPT,OU=swastisolutions,DC=swasti,DC=com"
   }
 }

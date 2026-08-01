@@ -17,14 +17,24 @@ class OUManager:
         config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config/groups.json')
         with open(config_path, 'r') as f:
             config = json.load(f)
-        return config.get('location_ou_mapping', {})
+        return {
+            'location_ou_mapping': config.get('location_ou_mapping', {}),
+            'department_ou_mapping': config.get('department_ou_mapping', {})
+        }
     
     def get_ou_for_location(self, location: str) -> str:
         """Get OU path for a specific location"""
         if not location:
-            return self.ou_mapping.get('DEFAULT')
+            return self.ou_mapping['location_ou_mapping'].get('DEFAULT')
         
-        return self.ou_mapping.get(location.upper(), self.ou_mapping.get('DEFAULT'))
+        return self.ou_mapping['location_ou_mapping'].get(location.upper(), self.ou_mapping['location_ou_mapping'].get('DEFAULT'))
+    
+    def get_ou_for_department(self, department: str) -> str:
+        """Get OU path for a specific department"""
+        if not department:
+            return self.ou_mapping['department_ou_mapping'].get('DEFAULT')
+        
+        return self.ou_mapping['department_ou_mapping'].get(department.upper(), self.ou_mapping['department_ou_mapping'].get('DEFAULT'))
     
     def move_user_to_ou(self, user_dn: str, target_ou: str) -> bool:
         """Move user to a different Organizational Unit"""
