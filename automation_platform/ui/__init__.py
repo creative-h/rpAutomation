@@ -9,6 +9,7 @@ from .logs import show_logs
 from .screenshots import show_screenshots
 from .settings import show_settings
 from .about import show_about
+from .demo import show_demo
 
 __all__ = [
     'show_dashboard',
@@ -17,5 +18,6 @@ __all__ = [
     'show_logs',
     'show_screenshots',
     'show_settings',
-    'show_about'
+    'show_about',
+    'show_demo'
 ]

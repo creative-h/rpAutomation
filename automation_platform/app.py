@@ -172,6 +172,7 @@ from ui.logs import show_logs
 from ui.screenshots import show_screenshots
 from ui.settings import show_settings
 from ui.about import show_about
+from ui.demo import show_demo
 
 # Session state initialization
 if 'page' not in st.session_state:
@@ -196,6 +197,7 @@ page = st.sidebar.radio(
     "Navigation",
     [
         "🏠 Dashboard",
+        "🎬 Demo",
         "🚀 Automation",
         "⚙️ Configuration",
         "📄 Reports",
@@ -210,6 +212,7 @@ page = st.sidebar.radio(
 # Map menu to page names
 page_mapping = {
     "🏠 Dashboard": "Dashboard",
+    "🎬 Demo": "Demo",
     "🚀 Automation": "Automation",
     "⚙️ Configuration": "Configuration",
     "📄 Reports": "Reports",
@@ -236,6 +239,8 @@ st.markdown('<div class="sub-header">Automated Employee Onboarding & Identity Ma
 # Route to appropriate page
 if st.session_state.page == "Dashboard":
     show_dashboard()
+elif st.session_state.page == "Demo":
+    show_demo()
 elif st.session_state.page == "Automation":
     show_automation()
 elif st.session_state.page == "Configuration":
