@@ -9,15 +9,23 @@ from models.user import User
 class ADUserCreator:
     """Active Directory user creation operations"""
     
-    def __init__(self, ldap_connection: LDAPConnection):
+    def __init__(self, ldap_connection: LDAPConnection, config_path: str = None):
         """Initialize AD user creator with connection"""
         self.connection = ldap_connection
-        self.config = self._load_config()
+        self.config = self._load_config(config_path)
     
-    def _load_config(self) -> dict:
+    def _load_config(self, config_path: str = None) -> dict:
         """Load AD configuration from JSON file"""
-        config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config/config.json')
-        with open(config_path, 'r') as f:
+        if config_path:
+            # If config_path is absolute or already contains parent directory, use as-is
+            if os.path.isabs(config_path) or 'config/' in config_path:
+                full_path = config_path
+            else:
+                full_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), config_path)
+        else:
+            full_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config/config.json')
+        
+        with open(full_path, 'r') as f:
             config = json.load(f)
         return config['ad']
     

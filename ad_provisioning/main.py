@@ -175,7 +175,7 @@ class ADProvisioningOrchestrator:
             else:
                 target_ou = ou_manager.get_ou_for_location(user.location)
             
-            user_creator = ADUserCreator(self.ldap_connection)
+            user_creator = ADUserCreator(self.ldap_connection, self.config_path)
             user_dn = user_creator.create_user(user, target_ou)
             
             if not user_dn:

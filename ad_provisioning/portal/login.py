@@ -17,7 +17,12 @@ class PortalLogin:
     
     def _load_config(self, config_path: str) -> dict:
         """Load portal configuration from JSON file"""
-        full_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), config_path)
+        # If config_path is absolute or already contains parent directory, use as-is
+        if os.path.isabs(config_path) or 'config/' in config_path:
+            full_path = config_path
+        else:
+            full_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), config_path)
+        
         with open(full_path, 'r') as f:
             config = json.load(f)
         return config

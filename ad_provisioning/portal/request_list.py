@@ -39,15 +39,13 @@ class RequestListReader:
             return []
     
     def filter_ad_requests(self, requests: List[Dict]) -> List[Dict]:
-        """Filter requests where Request Access For = ACTIVE DIRECTORY"""
+        """Filter requests where Request Access For column = ACTIVE DIRECTORY"""
         ad_requests = []
         
         for request in requests:
-            # Check if any column contains "ACTIVE DIRECTORY"
-            for key, value in request.items():
-                if "ACTIVE DIRECTORY" in value.upper():
-                    ad_requests.append(request)
-                    break
+            # Check if column_5 (Request Access For) contains "ACTIVE DIRECTORY"
+            if 'column_5' in request and "ACTIVE DIRECTORY" in request['column_5'].upper():
+                ad_requests.append(request)
         
         return ad_requests
     
@@ -69,21 +67,28 @@ class RequestListReader:
     def select_first_ad_request(self) -> bool:
         """Select and click the first Active Directory request"""
         try:
-            # Click on the cell with "ACTIVE DIRECTORY" text (matching codegen)
-            ad_cell = self.page.get_by_role("cell", name="ACTIVE DIRECTORY")
-            ad_cell.wait_for(state="visible", timeout=10000)
-            ad_cell.click()
-            self.page.wait_for_load_state("networkidle")
+            # Get all table rows
+            table = self.page.locator("table").first
+            rows = table.locator("tr").all()
             
-            # Click the delete link to open detail page (matching codegen)
-            delete_link = self.page.locator("#ctl00_ContentPlaceHolder1_grid_data_ctl04_lnkDelete")
-            delete_link.wait_for(state="visible", timeout=10000)
-            delete_link.click()
-            self.page.wait_for_load_state("networkidle")
+            # Skip header row (index 0)
+            for row in rows[1:]:
+                cells = row.locator("td").all()
+                if len(cells) > 5:
+                    # Check if column_5 (index 5) contains "ACTIVE DIRECTORY"
+                    cell_text = cells[5].inner_text().strip()
+                    if "ACTIVE DIRECTORY" in cell_text.upper():
+                        # Found the AD request row, click on the Select link (last cell)
+                        select_link = cells[-1].locator('a').first
+                        select_link.wait_for(state="visible", timeout=10000)
+                        select_link.click()
+                        self.page.wait_for_load_state("networkidle")
+                        return True
             
-            return True
+            print("No ACTIVE DIRECTORY request found in table")
+            return False
         except PlaywrightTimeoutError:
-            print("ACTIVE DIRECTORY cell or delete link not found")
+            print("ACTIVE DIRECTORY cell or select link not found")
             return False
         except Exception as e:
             print(f"Select first AD request failed: {str(e)}")

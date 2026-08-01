@@ -5,7 +5,7 @@
     "password": "123"
   },
   "ldap": {
-    "server": "swasti.com",
+    "server": "ldap://swasti.com",
     "domain": "swasti.com",
     "bind_user": "swasti\\administrator",
     "bind_password": "Shree@2029",
