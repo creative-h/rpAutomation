@@ -180,7 +180,7 @@ def show_demo():
     # Connected Systems
     st.markdown('<div class="ascii-section"><span class="ascii-label">Connected Systems</span></div>', unsafe_allow_html=True)
     st.markdown("""
-    │ 🟢 Request Portal   🟢 ELMS   🟡 Active Directory   ⚪ Microsoft 365 │
+    │ 🟢 Request Portal   🟢 Active Directory (swasti.com)   ⚪ ELMS   ⚪ Microsoft 365 │
     """, unsafe_allow_html=True)
     
     st.markdown("│                                                                     │", unsafe_allow_html=True)
@@ -249,15 +249,19 @@ def show_demo():
     if st.session_state.demo_request:
         request = st.session_state.demo_request
         st.markdown(f"""
-        <div class="request-detail">│ Employee : {request['employee']}</div>
-        <div class="request-detail">│ AD ID    : {request['ad_id']}</div>
-        <div class="request-detail">│ Location : {request['location']}</div>
+        <div class="request-detail">│ Employee   : {request['employee']}</div>
+        <div class="request-detail">│ AD ID      : {request['ad_id']}</div>
+        <div class="request-detail">│ Department : {request['department']}</div>
+        <div class="request-detail">│ Location   : {request['location']}</div>
+        <div class="request-detail">│ Target OU  : {request['ou']}</div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
-        <div class="request-detail">│ Employee : --</div>
-        <div class="request-detail">│ AD ID    : --</div>
-        <div class="request-detail">│ Location : --</div>
+        <div class="request-detail">│ Employee   : --</div>
+        <div class="request-detail">│ AD ID      : --</div>
+        <div class="request-detail">│ Department : --</div>
+        <div class="request-detail">│ Location   : --</div>
+        <div class="request-detail">│ Target OU  : --</div>
         """, unsafe_allow_html=True)
     
     # Footer
@@ -278,27 +282,30 @@ def start_demo():
     st.session_state.demo_logs = []
     st.session_state.demo_request = None
     
-    # Define workflow steps
+    # Define workflow steps (AD Provisioning only for swasti.com)
     workflow_steps = [
         (0, "Browser Started", "Ready to start"),
         (10, "Logged into Portal", "Logging into Source Portal..."),
         (20, "Request Retrieved", "Retrieving request from portal..."),
         (25, "Employee Data Validated", "Validating employee data..."),
-        (35, "Creating Active Directory User", "Creating AD user..."),
-        (50, "AD User Created", "Verifying AD user..."),
-        (60, "AD User Verified", "Opening ELMS..."),
-        (70, "ELMS Connected", "Creating ELMS user..."),
-        (85, "ELMS User Created", "Verifying ELMS user..."),
-        (95, "ELMS User Verified", "Approving request..."),
+        (30, "Connecting to AD (swasti.com)", "Connecting to Active Directory..."),
+        (40, "AD Connection Established", "Creating AD user in swasti.com..."),
+        (60, "AD User Created (OU=IT_DEPT)", "Setting user password..."),
+        (70, "Password Set", "Enabling account..."),
+        (80, "Account Enabled", "Forcing password change..."),
+        (90, "Password Change Forced", "Verifying user in AD..."),
+        (95, "User Verified in AD", "Approving request in portal..."),
         (100, "Request Approved", "Generating report..."),
-        (100, "Automation Completed", "Completed successfully")
+        (100, "AD Provisioning Completed", "Completed successfully")
     ]
     
     # Set current request
     st.session_state.demo_request = {
         "employee": "Amit Mishra",
         "ad_id": "amit.mishra",
-        "location": "Indore"
+        "location": "Indore",
+        "department": "IT",
+        "ou": "OU=IT_DEPT,OU=swastisolutions,DC=swasti,DC=com"
     }
     
     # Run demo in background thread
